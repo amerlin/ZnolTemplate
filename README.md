@@ -1,2 +1,2 @@
 # znolbe
-Template for arch
+A boilerplate template for an n-layer architecture in .Net Core
