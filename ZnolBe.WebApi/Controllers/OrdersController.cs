@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ZnolBe.BusinessLayer.Services.Interfaces;
+using ZnolBe.DataAccessLayer.Entities;
 using ZnolBe.Shared.Models.Requests;
 
 namespace ZnolBe.WebApi.Controllers;
@@ -24,6 +25,8 @@ public class OrdersController : ControllerBase
     /// Get all orders
     /// </summary>
     /// <returns>Return a list of orders</returns>
+    [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
+    [ProducesDefaultResponseType]
     [HttpGet]
     public async Task<IActionResult> GetListAsync()
     {
