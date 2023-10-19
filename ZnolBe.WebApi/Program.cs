@@ -13,6 +13,11 @@ using ZnolBe.DataAccessLayer;
 using Serilog;
 using ZnolBe.WebApi.Swagger;
 using Smash.WebApi.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using ZnolBe.Shared.Models.Auth;
+using ZnolBe.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,6 +115,38 @@ builder.Services.Scan(scan=>scan.FromAssemblyOf<PeopleService>()
     .AddClasses(classes=>classes.InNamespaceOf<PeopleService>())
     .AsImplementedInterfaces()
     .WithScopedLifetime());
+
+var jwtConfiguration = builder.Configuration.GetSection("JWT:Config").Get<JwtOptionsConfig>();
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ClockSkew = TimeSpan.Zero,
+            ValidateIssuer = jwtConfiguration!.ValidateIssuer,
+            ValidateAudience = jwtConfiguration!.ValidateAudience,
+            ValidateLifetime = jwtConfiguration!.ValidateLifetime,
+            ValidateIssuerSigningKey = jwtConfiguration!.ValidateIssuerSigningKey,
+            ValidIssuer = jwtConfiguration!.ValidIssuer,
+            ValidAudience = jwtConfiguration!.ValidAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfiguration!.Secret)
+            ),
+        };
+    });
+
+builder.Services
+    .AddIdentityCore<ZnolBeApplicationUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.User.RequireUniqueEmail = true;
+        options.Password.RequireDigit = false;
+        options.Password.RequiredLength = 6;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireLowercase = false;
+    })
+    .AddEntityFrameworkStores<DataContext>();
 
 builder.Services.AddProblemDetails();
 
